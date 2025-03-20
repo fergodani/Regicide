@@ -1,4 +1,4 @@
-package org.regicide.game;
+package org.regicide.models;
 
 import org.regicide.models.Card;
 import org.regicide.models.Face;
@@ -13,6 +13,7 @@ public class Game {
    private List<Card> hand;
    private Stack<Card> discard;
    private Stack<Card> castle;
+   private boolean isFinished = false;
 
    private Face currentFace;
 
@@ -27,13 +28,14 @@ public class Game {
       draw(8);
    }
 
+   /*
    public void start() {
       while (true) {
          showInfo();
          List<Card> cardsPlayed = playCards();
          attack(cardsPlayed);
          if (currentFace.getHealth() <= 0) {
-            System.out.println("Buena esa!!");
+            System.out.println("Enemigo derrotado");
             if (currentFace.getHealth() == 0) {
                tavern.push(currentFace);
             } else {
@@ -46,14 +48,79 @@ public class Game {
                return;
             }
          } else {
-            defend();
+            //defend();
          }
 
          System.out.println("\n*****************************\n\n");
       }
    }
 
-   private void attack(List<Card> cardsPlayed) {
+    */
+
+   public boolean checkEnemy() {
+      if (getCurrentFace().getHealth() <= 0) {
+
+         if (getCurrentFace().getHealth() == 0) {
+            getTavern().push(currentFace);
+         } else {
+            discard.push(currentFace);
+         }
+         return true;
+      }
+      return false;
+   }
+
+   public boolean checkFinish() {
+      if (castle.isEmpty()) {
+         this.isFinished = true;
+         return true;
+      }
+      return false;
+   }
+
+   private boolean checkCards(List<Card> cards) {
+      if (cards.size() == 1) return true;
+      boolean isAce = false;
+      for (Card card : cards) {
+         if (card.getValue() == 1) isAce = true;
+      }
+      int totalDamage = cards.stream()
+              .mapToInt(Card::getValue)
+              .sum();
+
+      if (totalDamage <= 10) {
+         // Comprobar que son iguales sus valores
+         boolean areSameValue = true;
+         int firstValue = cards.get(0).getValue();
+         for (Card card : cards) {
+            if (card.getValue() != firstValue) {
+               areSameValue = false;
+            }
+         }
+         if (!areSameValue) {
+            if (isAce && cards.size() == 2) {
+               return true;
+            }
+            System.out.println("No se pueden jugar esas cartas juntas");
+            //showHand();
+            return false;
+
+         }
+         return true;
+      } else {
+         if (cards.size() == 2 && isAce) {
+            return true;
+         }
+         System.out.println("No se pueden jugar esas cartas juntas");
+         //showHand();
+         return false;
+      }
+   }
+
+   public int attack(List<Card> cardsPlayed) {
+      if (!checkCards(cardsPlayed)) {
+         return 0;
+      }
       int totalDamage = cardsPlayed.stream()
               .mapToInt(Card::getValue)
               .sum();
@@ -96,55 +163,29 @@ public class Game {
          hand.remove(card);
       }
       discard.addAll(cardsPlayed);
-      System.out.println("Has hecho " + totalDamage + " de daño");
+
+      return totalDamage;
    }
 
-   private void defend() {
-      if (currentFace.getDamage() == 0) return;
-      System.out.println("Tienes que defenderte de " + currentFace.getDamage());
-      showHand();
-      String input = scanner.nextLine();
+   public boolean defend(List<Card> cardsPlayed) {
+      if (currentFace.getDamage() == 0) return true;
 
-      // Procesar los índices introducidos
-      String[] indicesStr = input.split(" ");
-      List<Integer> indices = new ArrayList<>();
-      boolean indicesValidos = true;
-
-      // Verificar que todos los índices sean válidos
-      for (String str : indicesStr) {
-         try {
-            int indice = Integer.parseInt(str);
-            if (indice >= 0 && indice < hand.size()) {
-               indices.add(indice);
-            } else {
-               System.out.println("Índice " + indice + " fuera de rango.");
-               indicesValidos = false;
-               break;
-            }
-         } catch (NumberFormatException e) {
-            System.out.println("Entrada inválida. Asegúrate de ingresar números.");
-            indicesValidos = false;
-            break;
-         }
+      int defendPoints = 0;
+      for (Card card : cardsPlayed) {
+         defendPoints += card.getValue();
       }
-
-      if (indicesValidos) {
-         int defendPoints = 0;
-         for (int indice : indices) {
-            defendPoints += hand.get(indice).getValue();
-         }
-         if (defendPoints < currentFace.getDamage()) {
-            System.out.println("No es suficiente la defensa");
-            defend();
-         } else {
-            Collections.sort(indices, Comparator.reverseOrder());
-            for (int indice : indices) {
-               discard.add(hand.remove(indice));
-            }
-         }
+      if (defendPoints < currentFace.getDamage()) {
+         return false;
       }
+      for (Card card : cardsPlayed) {
+         hand.remove(card);
+      }
+      discard.addAll(cardsPlayed);
+      return true;
+
    }
 
+   /*
    private void showInfo() {
       System.out.println("### Taverna: " + tavern.size() + " - Descarte: " + discard.size() + " - Castillo: " + castle.size() + " ###");
       System.out.println("\n### Enemigo ###");
@@ -152,6 +193,8 @@ public class Game {
       System.out.println("### Vida: " + currentFace.getHealth() + " - Ataque: " + currentFace.getDamage() + " ###");
       showHand();
    }
+
+
 
    private void showHand() {
       System.out.println("\n### Tu mano ###");
@@ -161,6 +204,8 @@ public class Game {
       System.out.println();
       System.out.print("Elige las cartas que quieras jugar (separados por espacios): ");
    }
+
+    */
 
    private List<Card> playCards() {
       String input = scanner.nextLine();
@@ -214,8 +259,8 @@ public class Game {
                   if (isAce && cards.size() == 2) {
                      return cards;
                   }
-                  System.out.println("No se pueden jugar esas cartas juntas");
-                  showHand();
+                  //System.out.println("No se pueden jugar esas cartas juntas");
+                  //showHand();
                   return playCards();
 
                }
@@ -224,8 +269,8 @@ public class Game {
                if (cards.size() == 2 && isAce) {
                   return cards;
                }
-               System.out.println("No se pueden jugar esas cartas juntas");
-               showHand();
+               //System.out.println("No se pueden jugar esas cartas juntas");
+               //showHand();
                return playCards();
             }
          }
@@ -348,7 +393,35 @@ public class Game {
       System.out.println("Te has curado " + count + " cartas");
    }
 
-   private void nextEnemy() {
+   public void nextEnemy() {
       this.currentFace = new Face(this.castle.pop());
+   }
+
+   public Stack<Card> getTavern() {
+      return tavern;
+   }
+
+   public List<Card> getHand() {
+      return hand;
+   }
+
+   public Stack<Card> getDiscard() {
+      return discard;
+   }
+
+   public Stack<Card> getCastle() {
+      return castle;
+   }
+
+   public Face getCurrentFace() {
+      return currentFace;
+   }
+
+   public boolean isFinished() {
+      return isFinished;
+   }
+
+   public void setFinished(boolean finished) {
+      isFinished = finished;
    }
 }

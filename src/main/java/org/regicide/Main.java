@@ -1,11 +1,14 @@
 package org.regicide;
 
-import org.regicide.game.Game;
+import org.regicide.controllers.GameController;
+import org.regicide.models.Game;
+import org.regicide.view.ConsoleView;
 
 public class Main {
 
    public static void main(String[] args) {
       Game game = new Game();
-      game.start();
+      GameController controller = new GameController(new ConsoleView(game));
+      controller.start();
    }
 }
