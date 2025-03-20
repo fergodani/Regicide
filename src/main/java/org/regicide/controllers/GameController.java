@@ -1,5 +1,6 @@
 package org.regicide.controllers;
 
+import org.regicide.models.AttackResult;
 import org.regicide.models.Card;
 import org.regicide.models.Game;
 import org.regicide.view.UserInterface;
@@ -11,8 +12,8 @@ public class GameController {
    private Game game;
    private UserInterface ui;
 
-   public GameController(UserInterface userInterface) {
-      this.game = new Game();
+   public GameController(UserInterface userInterface, Game game) {
+      this.game = game;
       this.ui = userInterface;
    }
 
@@ -20,15 +21,19 @@ public class GameController {
       while (!game.isFinished()) {
 
          List<Card> cardsPlayed;
-         int damageDone = 0;
+         AttackResult attackResult;
          do {
+            ui.showMessage("\n*** ATAQUE ***\n");
             ui.updateInfo();
             cardsPlayed = ui.playCards();
-            damageDone = game.attack(cardsPlayed); // TODO: no le baja la vida al enemigo
-            if (damageDone == 0)
+            attackResult = game.attack(cardsPlayed);
+            if (attackResult.getDamage() == 0) {
                ui.showMessage("Por favor, haz una jugada válida");
-         } while (damageDone == 0);
-         ui.showMessage("Has hecho " + damageDone + " puntos de daño");
+            } else {
+               showAttackResult(attackResult);
+            }
+         } while (attackResult.getDamage() == 0);
+
          cardsPlayed.clear();
          if (game.checkEnemy()) {
             ui.showMessage("Enemigo derrotado");
@@ -38,15 +43,29 @@ public class GameController {
          } else {
             boolean defense = false;
             do {
+               ui.showMessage("\n*** DEFENSA ***\n");
                ui.updateInfo();
+               if (game.getCurrentFace().getDamage() == 0) {
+                  defense = true;
+                  continue;
+               }
                cardsPlayed = ui.playCards();
                defense = game.defend(cardsPlayed);
                if (!defense)
                   ui.showMessage("No te has defendido con suficientes puntos");
-            } while (!game.defend(cardsPlayed)); // TODO: Mostrar que ahora va la defensa
+            } while (!defense);
          }
-
+         attackResult.clear();
       }
       ui.showMessage("Has ganado");
+   }
+
+   private void showAttackResult(AttackResult result) {
+      if (result.getDamage() != 0) ui.showMessage("Has hecho " + result.getDamage() + " puntos de daño");
+      if (result.getHeal() != 0) ui.showMessage("Te has curado " + result.getHeal() + " cartas");
+      if (result.getDefend() != 0) ui.showMessage("Te defiendes de " + result.getDefend() + " puntos de daño");
+      if (!result.getCardsDrawn().isEmpty()) {
+         ui.showCardsDrawn(result.getCardsDrawn());
+      }
    }
 }

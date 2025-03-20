@@ -8,7 +8,7 @@ public class Main {
 
    public static void main(String[] args) {
       Game game = new Game();
-      GameController controller = new GameController(new ConsoleView(game));
+      GameController controller = new GameController(new ConsoleView(game), game);
       controller.start();
    }
 }

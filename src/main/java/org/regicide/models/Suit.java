@@ -1,7 +1,7 @@
 package org.regicide.models;
 
 public enum Suit {
-   HEARTHS("H"), DIAMONDS("D"), CLUBS("C"), SPADES("S");
+   HEARTHS("\u2665"), DIAMONDS("\u2660"), CLUBS("\u2666"), SPADES("\u2663");
 
    private final String symbol;
 
